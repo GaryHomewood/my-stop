@@ -4,7 +4,7 @@
 #include <Time.h>
 
 // Define api details in a header file
-// #define API_URL "" 
+// #define API_URL ""
 // #define STOP ""
 #include "ApiConstants.h"
 
@@ -25,16 +25,16 @@ void loop() {
     String busDetail;
     int busSequence = 0;
 
-    // flash the onboard LED whilst retrieving data
+    // Flash the onboard LED whilst retrieving data
     digitalWrite(13, HIGH);
 
     unsigned long currentTime = getCurrentTime();
 
-    // call the api to get the bus times
+    // Call the api to get the bus times
     HttpClient client;
     client.get(url);
 
-    // read incoming bytes 
+    // Read incoming bytes
     while (client.available()) {
         char c = client.read();
 
@@ -47,42 +47,42 @@ void loop() {
                 busDetailStart = false;
                 String busNumber = getSubstring(busDetail, ',', 1);
 
-                // ignore header row
+                // Ignore header row
                 if (busNumber != "1.0") {
                     busSequence++;
 
                     if (busSequence <= numberOfBuses) {
                         String destination = getSubstring(busDetail, ',', 2);
-                        // rogue forward slash in api response
+                        // Rogue forward slash in api response
                         destination.replace('/',' ');
-                        
+
                         String estimatedTime = getSubstring(busDetail, ',', 3);
-                        // remove last 3 digits to convert from ms to secs
+                        // Remove last 3 digits to convert from ms to secs
                         String t = estimatedTime.substring(0, estimatedTime.length() - 3);
                         char busArrivalTime [20];
                         t.toCharArray(busArrivalTime, 20);
                         int secondsWait = atol(busArrivalTime) - currentTime;
 
-                        // store in an array for subsequent sorting on wait time
-                        busArrivals[busSequence][0] = busNumber + " " + destination + ";" +  displayTime(t);         
+                        // Store in an array for subsequent sorting on wait time
+                        busArrivals[busSequence][0] = busNumber + " " + destination + ";" +  displayTime(t);
                         busArrivals[busSequence][1] = String(secondsWait/60);
                     }
                 }
 
                 busDetail = "";
-        } else { 
+        } else {
             busDetail += c;
         }
     }
 
     sortBusArrivals();
     displayBusArrivals();
-    
+
     Serial.println("");
     Serial.flush();
     digitalWrite(13, LOW);
 
-    // query again in 30 seconds
+    // Query again in 30 seconds
     delay(30000);
 }
 
@@ -93,7 +93,7 @@ void sortBusArrivals() {
             if ((busArrivals[y][1].toInt()) > (busArrivals[y + 1][1].toInt())) {
                 String busDetails = busArrivals[y + 1][0];
                 String waitTime = busArrivals[y + 1][1];
-                
+
                 busArrivals[y + 1][0] = busArrivals[y][0];
                 busArrivals[y][0] = busDetails;
 
@@ -116,7 +116,7 @@ void displayBusArrivals() {
             String busDetail = busArrivals[i][0];
             Serial.print(getSubstring(busDetail, ';', 0));
             Serial.print(" - ");
-            
+
             String numberOfMinutes = busArrivals[i][1];
             switch(numberOfMinutes.toInt()) {
                 case 0:
@@ -125,14 +125,14 @@ void displayBusArrivals() {
                 case 1:
                     Serial.print("1 minute");
                     break;
-                default: 
+                default:
                     Serial.print(numberOfMinutes + " minutes");
             }
-            
+
             Serial.print(" - ETA: ");
             Serial.print(getSubstring(busDetail, ';', 1));
             Serial.println();
-        }         
+        }
     }
 }
 
@@ -140,22 +140,22 @@ void displayBusArrivals() {
 String displayTime(String val) {
     String t1 = "";
     time_t t = val.toInt();
-  
+
     int h = hour(t);
     if (h < 10)
         t1 = "0";
     t1 = t1 + String(h) + ":";
-  
+
     int m = minute(t);
     if (m < 10)
         t1 = t1 +  "0";
     t1 = t1 +  String(m) + ":";
-    
+
     int s = second(t);
     if (s < 10)
         t1 = t1 +  "0";
     t1 = t1 +  String(s);
-  
+
     return t1;
 }
 
@@ -176,8 +176,6 @@ String getSubstring(String s, char parser, int index) {
             }
             String s2 = s.substring(rFromIndex,rToIndex);
             s2.replace('"',' ');
-            // rogue forward slash in API response...
-            //s2.replace('/',' ');
             s2.trim();
             return s2;
         } else {
@@ -187,7 +185,7 @@ String getSubstring(String s, char parser, int index) {
     return rs;
 }
 
-// Get the time using the Bridge librarys Process class 
+// Get the time using the Bridge librarys Process class
 unsigned long getCurrentTime() {
     Process p1;
     char epochCharArray[12] = "";
@@ -200,7 +198,7 @@ unsigned long getCurrentTime() {
         Serial.print("current time: ");
         Serial.println(p1.readString());
     }
-  
+
     // Get and return UNIX timestamp for calculation of wait
     p1.begin("date");
     p1.addParameter("+%s");
